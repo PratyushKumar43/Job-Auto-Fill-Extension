@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Job Auto-Filler</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="app" class="app-container">
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo-icon">
+          <span class="material-symbols-outlined">bolt</span>
+        </div>
+        <h1 class="logo-text">Auto-Filler</h1>
+      </div>
+      <div class="header-right">
+        <div id="statusBadge" class="status-badge status-ready">
+          <span class="status-dot"></span>
+          <span class="status-text">Ready</span>
+        </div>
+        <button id="btnThemeToggle" class="icon-btn" title="Toggle theme">
+          <span class="material-symbols-outlined">contrast</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===== TAB BAR ===== -->
+    <nav class="tab-bar">
+      <button class="tab active" data-tab="upload">
+        <span class="material-symbols-outlined">upload_file</span> Upload
+      </button>
+      <button class="tab" data-tab="profile">
+        <span class="material-symbols-outlined">person</span> Profile
+      </button>
+      <button class="tab" data-tab="saved">
+        <span class="material-symbols-outlined">bookmark</span> Saved
+      </button>
+      <button class="tab" data-tab="settings">
+        <span class="material-symbols-outlined">settings</span> Settings
+      </button>
+    </nav>
+
+    <!-- ===== UPLOAD TAB ===== -->
+    <div id="tab-upload" class="tab-content active">
+      <!-- AI Settings -->
+      <section class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined text-primary">psychology</span>
+          <h3>AI Settings</h3>
+        </div>
+        <div class="form-group">
+          <label>API Endpoint</label>
+          <div class="input-wrapper">
+            <span class="material-symbols-outlined input-icon">link</span>
+            <input type="url" id="customEndpoint" placeholder="https://api.openai.com/v1/chat/completions" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Model Name</label>
+          <div class="input-wrapper">
+            <span class="material-symbols-outlined input-icon">neurology</span>
+            <input type="text" id="settingsModelName" placeholder="e.g. gpt-4o-mini, claude-sonnet-4-20250514" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>API Key</label>
+          <div class="input-row">
+            <div class="input-wrapper flex-1">
+              <span class="material-symbols-outlined input-icon">vpn_key</span>
+              <input type="password" id="apiKey" placeholder="sk-••••••••••••" />
+              <button id="btnToggleKey" class="input-action">
+                <span class="material-symbols-outlined">visibility</span>
+              </button>
+            </div>
+            <button id="btnSaveKey" class="btn btn-primary btn-sm">Save</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Resume Upload -->
+      <section class="card">
+        <div class="card-header">
+          <h3>Resume Upload</h3>
+          <span class="step-badge">Step 1 of 2</span>
+        </div>
+        <div id="uploadZone" class="upload-zone">
+          <div class="upload-icon-wrap">
+            <span class="material-symbols-outlined">cloud_upload</span>
+          </div>
+          <p class="upload-title">Drop your resume here</p>
+          <p class="upload-subtitle">PDF or DOCX (Max 5MB)</p>
+          <button class="btn btn-outline btn-sm">
+            <span class="material-symbols-outlined">attach_file</span> Browse Files
+          </button>
+          <input type="file" id="fileInput" accept=".pdf,.docx" />
+        </div>
+        <div id="fileInfo" class="file-info" style="display:none">
+          <div class="file-info-left">
+            <span class="material-symbols-outlined text-primary">description</span>
+            <div>
+              <p id="fileName" class="file-name"></p>
+              <p id="fileSize" class="file-size"></p>
+            </div>
+          </div>
+          <button id="btnRemoveFile" class="icon-btn" title="Remove file">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Processing indicator -->
+      <section id="processingCard" class="card" style="display:none">
+        <div class="processing-bar-wrap">
+          <div class="processing-header">
+            <span class="text-primary font-semibold">Processing Resume</span>
+            <span id="processingPercent" class="text-primary font-bold">0%</span>
+          </div>
+          <div class="progress-track">
+            <div id="progressBar" class="progress-fill"></div>
+          </div>
+          <p id="processingStatus" class="processing-status">
+            <span class="material-symbols-outlined spin">refresh</span>
+            Extracting text from resume...
+          </p>
+        </div>
+      </section>
+
+      <!-- Extract button -->
+      <button id="btnExtract" class="btn btn-primary btn-block" disabled>
+        <span class="material-symbols-outlined">auto_fix_high</span>
+        Extract Resume Data
+      </button>
+    </div>
+
+    <!-- ===== PROFILE TAB ===== -->
+    <div id="tab-profile" class="tab-content">
+      <section class="card">
+        <div class="card-header">
+          <h3>Profile Preview</h3>
+          <button id="btnResetProfile" class="link-btn">Reset</button>
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <div class="input-wrapper"><span class="material-symbols-outlined input-icon">person</span>
+            <input type="text" id="profileName" placeholder="Your Name" /></div>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <div class="input-wrapper"><span class="material-symbols-outlined input-icon">mail</span>
+            <input type="email" id="profileEmail" placeholder="you@email.com" /></div>
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <div class="input-wrapper"><span class="material-symbols-outlined input-icon">call</span>
+            <input type="tel" id="profilePhone" placeholder="+1 (555) 012-3456" /></div>
+        </div>
+        <div class="form-group">
+          <label>LinkedIn</label>
+          <div class="input-wrapper"><span class="material-symbols-outlined input-icon">link</span>
+            <input type="url" id="profileLinkedin" placeholder="linkedin.com/in/yourname" /></div>
+        </div>
+        <div class="form-group">
+          <label>Summary</label>
+          <textarea id="profileSummary" rows="3" placeholder="Brief professional summary..."></textarea>
+        </div>
+      </section>
+
+      <!-- Compensation & Availability -->
+      <section class="card">
+        <div class="card-header">
+          <h3>Compensation & Availability</h3>
+        </div>
+        <div class="form-group">
+          <label>Current Salary</label>
+          <div class="input-wrapper"><span class="material-symbols-outlined input-icon">payments</span>
+            <input type="text" id="profileCurrentSalary" placeholder="e.g. 1000, 1000 USD" /></div>
+        </div>
+        <div class="form-group">
+          <label>Expected Salary</label>
+          <div class="input-wrapper"><span class="material-symbols-outlined input-icon">price_change</span>
+            <input type="text" id="profileExpectedSalary" placeholder="e.g. 2000 USD" /></div>
+        </div>
+        <div class="form-group">
+          <label>Notice Period</label>
+          <div class="input-wrapper"><span class="material-symbols-outlined input-icon">schedule</span>
+            <input type="text" id="profileNoticePeriod" placeholder="e.g. 2 months" /></div>
+        </div>
+        <div class="form-group">
+          <label>Earliest Available Date</label>
+          <div class="input-wrapper"><span class="material-symbols-outlined input-icon">event_available</span>
+            <input type="text" id="profileAvailableDate" placeholder="e.g. 25/09/2023" /></div>
+        </div>
+        <div class="form-group">
+          <label>Cover Letter <span style="font-size:10px;color:var(--text-muted)">(max 7000 chars)</span></label>
+          <textarea id="profileCoverLetter" rows="5" maxlength="7000" placeholder="Write your cover letter here..."></textarea>
+        </div>
+      </section>
+
+      <!-- EEO / Demographics -->
+      <section class="card">
+        <div class="card-header">
+          <h3>Demographics <span style="font-size:10px;color:var(--text-muted);font-weight:400">(Optional)</span></h3>
+        </div>
+        <div class="form-group">
+          <label>Gender Identity</label>
+          <div class="select-wrapper">
+            <select id="profileGender">
+              <option value="">-- Select --</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Non-binary">Non-binary</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+              <option value="Other">Other</option>
+            </select>
+            <span class="material-symbols-outlined select-arrow">expand_more</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Race / Ethnicity</label>
+          <div class="select-wrapper">
+            <select id="profileRace">
+              <option value="">-- Select --</option>
+              <option value="American Indian or Alaska Native">American Indian or Alaska Native</option>
+              <option value="Asian">Asian</option>
+              <option value="Black or African American">Black or African American</option>
+              <option value="Hispanic or Latino">Hispanic or Latino</option>
+              <option value="Native Hawaiian or Other Pacific Islander">Native Hawaiian or Other Pacific Islander</option>
+              <option value="White">White</option>
+              <option value="Two or More Races">Two or More Races</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+            <span class="material-symbols-outlined select-arrow">expand_more</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Sexual Orientation</label>
+          <div class="select-wrapper">
+            <select id="profileOrientation">
+              <option value="">-- Select --</option>
+              <option value="Heterosexual">Heterosexual</option>
+              <option value="Gay">Gay</option>
+              <option value="Lesbian">Lesbian</option>
+              <option value="Bisexual">Bisexual</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+              <option value="Other">Other</option>
+            </select>
+            <span class="material-symbols-outlined select-arrow">expand_more</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Disability Status</label>
+          <div class="select-wrapper">
+            <select id="profileDisability">
+              <option value="">-- Select --</option>
+              <option value="Yes, I have a disability">Yes, I have a disability</option>
+              <option value="No, I do not have a disability">No, I do not have a disability</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+            <span class="material-symbols-outlined select-arrow">expand_more</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Veteran Status</label>
+          <div class="select-wrapper">
+            <select id="profileVeteran">
+              <option value="">-- Select --</option>
+              <option value="I am a veteran">I am a veteran</option>
+              <option value="I am not a veteran">I am not a veteran</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+            <span class="material-symbols-outlined select-arrow">expand_more</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Experience -->
+      <section class="card">
+        <div class="card-header">
+          <h3>Work Experience</h3>
+          <button id="btnAddExp" class="link-btn">+ Add</button>
+        </div>
+        <div id="experienceList" class="item-list"></div>
+      </section>
+
+      <!-- Education -->
+      <section class="card">
+        <div class="card-header">
+          <h3>Education</h3>
+          <button id="btnAddEdu" class="link-btn">+ Add</button>
+        </div>
+        <div id="educationList" class="item-list"></div>
+      </section>
+
+      <!-- Skills -->
+      <section class="card">
+        <div class="card-header">
+          <h3>Skills</h3>
+        </div>
+        <div id="skillsTags" class="tags-container"></div>
+        <div class="input-row mt-2">
+          <input type="text" id="skillInput" placeholder="Add a skill..." class="flex-1" />
+          <button id="btnAddSkill" class="btn btn-outline btn-sm">Add</button>
+        </div>
+      </section>
+
+      <!-- Save profile + Auto-Fill -->
+      <button id="btnSaveProfile" class="btn btn-outline btn-block">
+        <span class="material-symbols-outlined">save</span> Save Profile
+      </button>
+    </div>
+
+    <!-- ===== SAVED FIELDS TAB ===== -->
+    <div id="tab-saved" class="tab-content">
+      <section class="card">
+        <div class="card-header">
+          <h3>Quick-Fill Fields</h3>
+          <button id="btnAddSavedField" class="link-btn">+ Add</button>
+        </div>
+        <p class="hint-text">These fields fill instantly — no AI needed. Great for repetitive data like college name, roll number, GPA, etc.</p>
+        <!-- Pre-built templates -->
+        <div id="savedFieldsList" class="saved-fields-list"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h3>Add New Field</h3>
+        </div>
+        <div class="form-group">
+          <label>Field Label</label>
+          <input type="text" id="newFieldLabel" placeholder='e.g. "College Name"' />
+        </div>
+        <div class="form-group">
+          <label>Value</label>
+          <input type="text" id="newFieldValue" placeholder='e.g. "NIT Rourkela"' />
+        </div>
+        <div class="form-group">
+          <label>Aliases <span class="hint">(comma separated)</span></label>
+          <input type="text" id="newFieldAliases" placeholder='e.g. "university, institute, school"' />
+        </div>
+        <div class="form-group">
+          <label>Group</label>
+          <div class="select-wrapper">
+            <select id="newFieldGroup">
+              <option value="academic">Academic</option>
+              <option value="personal">Personal</option>
+              <option value="professional">Professional</option>
+              <option value="other">Other</option>
+            </select>
+            <span class="material-symbols-outlined select-arrow">expand_more</span>
+          </div>
+        </div>
+        <button id="btnSaveNewField" class="btn btn-primary btn-block">
+          <span class="material-symbols-outlined">add</span> Save Field
+        </button>
+      </section>
+
+      <div class="btn-row">
+        <button id="btnExportFields" class="btn btn-outline btn-sm flex-1">
+          <span class="material-symbols-outlined">download</span> Export
+        </button>
+        <button id="btnImportFields" class="btn btn-outline btn-sm flex-1">
+          <span class="material-symbols-outlined">upload</span> Import
+        </button>
+        <input type="file" id="importFieldsInput" accept=".json" style="display:none" />
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS TAB ===== -->
+    <div id="tab-settings" class="tab-content">
+      <section class="card">
+        <div class="card-header">
+          <h3>Preferences</h3>
+        </div>
+
+        <label class="toggle-row">
+          <span>Auto-detect job board pages</span>
+          <input type="checkbox" id="settingsAutoDetect" checked />
+          <div class="toggle-switch"></div>
+        </label>
+        <label class="toggle-row">
+          <span>Save session data to cloud</span>
+          <input type="checkbox" id="settingsCloudSync" />
+          <div class="toggle-switch"></div>
+        </label>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h3>Data Management</h3>
+        </div>
+        <button id="btnExportProfile" class="btn btn-outline btn-block mb-2">
+          <span class="material-symbols-outlined">download</span> Export All Data
+        </button>
+        <button id="btnClearAll" class="btn btn-danger btn-block">
+          <span class="material-symbols-outlined">delete</span> Clear All Data
+        </button>
+      </section>
+
+      <div class="about-text">
+        <p>Job Auto-Filler v1.0.0</p>
+        <p>Your data is encrypted and never shared.</p>
+      </div>
+    </div>
+
+    <!-- ===== FOOTER (always visible) ===== -->
+    <footer class="footer">
+      <button id="btnAutoFill" class="btn btn-primary btn-block btn-lg">
+        <span class="material-symbols-outlined">auto_fix_high</span>
+        Auto-Fill Now
+      </button>
+      <p class="footer-note">
+        <span class="material-symbols-outlined">security</span>
+        Data is encrypted and never shared.
+      </p>
+    </footer>
+  </div>
+
+  <script src="../lib/storage.js"></script>
+  <script src="../lib/pdf.min.js"></script>
+  <script src="../lib/pdf-parser.js"></script>
+  <script src="../lib/saved-fields.js"></script>
+  <script src="../lib/alias-matcher.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
