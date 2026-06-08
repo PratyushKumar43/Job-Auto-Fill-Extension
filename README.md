@@ -66,10 +66,10 @@ The **Saved** tab lets you store repetitive data that appears on every applicati
 
 | Field | Example | Auto-matches |
 |---|---|---|
-| College | NIT Rourkela | "university", "institute", "college name" |
-| Roll No | 122BM0243 | "roll number", "student id", "enrollment no" |
-| GPA | 8.5 | "cgpa", "grade", "percentage" |
-| Grad Year | 2026 | "graduation year", "batch", "year of passing" |
+| College | xxxxxx | "university", "institute", "college name" |
+| Roll No | 12xxxxxx | "roll number", "student id", "enrollment no" |
+| GPA | xxx | "cgpa", "grade", "percentage" |
+| Grad Year | xxx | "graduation year", "batch", "year of passing" |
 
 These fields are matched using fuzzy alias matching and fill **instantly** — no API call required.
 
